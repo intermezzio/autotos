@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoTOS</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <span class="logo">AutoTOS</span>
+      <span id="domain-label" class="domain-label"></span>
+    </header>
+    <main id="content" class="content">
+      <!-- States are rendered here by main.ts -->
+      <div class="state" id="loading">
+        <div class="spinner" aria-label="Loading"></div>
+      </div>
+    </main>
+    <footer class="app-footer">
+      <a href="https://autotos.me" target="_blank" rel="noopener">About</a>
+    </footer>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

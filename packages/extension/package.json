@@ -1,0 +1,27 @@
+{
+  "name": "@autotos/extension",
+  "version": "0.1.0",
+  "description": "AutoTOS browser extension (Chrome / Firefox / Safari) — detects the current site and shows its terms-of-service analysis.",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:chrome": "wxt build -b chrome",
+    "build:firefox": "wxt build -b firefox",
+    "build:safari": "wxt build -b safari",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "typecheck": "tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@autotos/contracts": "0.1.0",
+    "@autotos/core": "0.1.0",
+    "webextension-polyfill": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/webextension-polyfill": "^0.12.0",
+    "wxt": "^0.19.0"
+  }
+}

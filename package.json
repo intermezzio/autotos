@@ -1,0 +1,24 @@
+{
+  "name": "autotos",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AutoTOS — automatic Terms of Service parser and summarizer. Monorepo for the analysis generator, browser extension, and shared contracts.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "ext:dev": "npm run dev --workspace @autotos/extension",
+    "ext:build:chrome": "npm run build:chrome --workspace @autotos/extension",
+    "ext:build:firefox": "npm run build:firefox --workspace @autotos/extension",
+    "ext:build:safari": "npm run build:safari --workspace @autotos/extension"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

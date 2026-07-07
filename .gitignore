@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.output/
+.wxt/
+*.tsbuildinfo
+
+# Extension packages
+*.zip
+*.xpi
+web-ext-artifacts/
+
+# Safari / Xcode
+packages/extension-safari/build/
+packages/extension-safari/**/xcuserdata/
+DerivedData/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+key.json
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log

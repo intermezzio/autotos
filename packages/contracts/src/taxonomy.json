@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "clauses": [
+    {
+      "key": "has_last_updated_date",
+      "title": "Has a last-updated date",
+      "effect": "neutral",
+      "weight": 5,
+      "guidance": "The terms clearly state when they were last revised."
+    },
+    {
+      "key": "age_restricted",
+      "title": "Only available to users of a certain age",
+      "effect": "neutral",
+      "weight": 15,
+      "guidance": "Use of the service is restricted to users above a minimum age."
+    },
+    {
+      "key": "tracking_pixels_fingerprinting",
+      "title": "Tracking pixels and/or device fingerprinting",
+      "effect": "bad",
+      "weight": 50,
+      "guidance": "The service uses tracking pixels, web beacons, or device fingerprinting to identify or track users."
+    },
+    {
+      "key": "no_warranty_as_is",
+      "title": "Service provided 'as is' with no warranty of uninterrupted or accurate service",
+      "effect": "bad",
+      "weight": 20,
+      "guidance": "The service disclaims warranties and does not guarantee uptime, accuracy, or error-free operation."
+    },
+    {
+      "key": "indemnify_service",
+      "title": "You must defend, indemnify, and hold the service harmless",
+      "effect": "bad",
+      "weight": 60,
+      "guidance": "The user agrees to indemnify the service against claims arising from the user's use."
+    },
+    {
+      "key": "ignores_dnt",
+      "title": "Ignores the Do Not Track (DNT) browser signal",
+      "effect": "bad",
+      "weight": 60,
+      "guidance": "The service explicitly states it does not honor Do Not Track headers."
+    },
+    {
+      "key": "delete_account_without_notice",
+      "title": "Can delete your account or content without prior notice or reason",
+      "effect": "bad",
+      "weight": 60,
+      "guidance": "The service reserves the right to terminate accounts or remove content without warning or justification."
+    },
+    {
+      "key": "terms_change_without_notice",
+      "title": "Terms may change at any time without notice to the user",
+      "effect": "bad",
+      "weight": 70,
+      "guidance": "The service may modify the terms unilaterally and is not required to notify users."
+    },
+    {
+      "key": "account_security_user_responsibility",
+      "title": "You are responsible for your account's security and activity",
+      "effect": "neutral",
+      "weight": 10,
+      "guidance": "The user bears responsibility for safeguarding credentials and for activity on the account; the service disclaims liability."
+    },
+    {
+      "key": "does_not_sell_personal_data",
+      "title": "Does not sell your personal data",
+      "effect": "good",
+      "weight": 60,
+      "guidance": "The service commits to not selling users' personal data to third parties."
+    },
+    {
+      "key": "can_request_access_and_deletion",
+      "title": "You can request access to and deletion of your personal data",
+      "effect": "good",
+      "weight": 50,
+      "guidance": "Users have the right to access and delete the personal data the service holds about them."
+    },
+    {
+      "key": "can_sell_personal_data",
+      "title": "Can sell your personal data",
+      "effect": "bad",
+      "weight": 50,
+      "guidance": "The service reserves the right to sell or share users' personal data with third parties for value."
+    },
+    {
+      "key": "data_stored_anywhere",
+      "title": "Your data may be processed and stored anywhere in the world",
+      "effect": "bad",
+      "weight": 10,
+      "guidance": "The service may transfer and store data in jurisdictions other than the user's own."
+    },
+    {
+      "key": "third_party_cookies_ads",
+      "title": "Uses third-party cookies for statistics and/or advertising",
+      "effect": "bad",
+      "weight": 70,
+      "guidance": "The service sets third-party cookies for analytics or advertising purposes."
+    },
+    {
+      "key": "can_opt_out_promotional",
+      "title": "You can opt out of promotional communications",
+      "effect": "good",
+      "weight": 50,
+      "guidance": "Users may unsubscribe from marketing or promotional messages."
+    },
+    {
+      "key": "right_to_leave",
+      "title": "You have the right to leave the service at any time",
+      "effect": "good",
+      "weight": 15,
+      "guidance": "Users may close their account and stop using the service whenever they choose."
+    },
+    {
+      "key": "notified_of_terms_changes",
+      "title": "You will be notified when the terms change",
+      "effect": "good",
+      "weight": 30,
+      "guidance": "The service commits to notifying users of material changes to the terms."
+    }
+  ]
+}

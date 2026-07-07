@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "comment": "Source of truth for cross-domain aliases. Each entry lists a canonical registrable domain (eTLD+1) and the other registrable domains that share the SAME terms of service. Consumed by (1) the generator to dedupe before analyzing, and (2) the client build, which derives aliases.json (alias -> canonical) from it.",
+  "groups": [
+    {
+      "canonical": "twitter.com",
+      "aliases": ["x.com"]
+    },
+    {
+      "canonical": "facebook.com",
+      "aliases": ["fb.com"]
+    },
+    {
+      "canonical": "google.com",
+      "aliases": ["google.co.uk", "google.ca", "google.de", "google.fr"]
+    },
+    {
+      "canonical": "youtube.com",
+      "aliases": ["youtu.be"]
+    }
+  ]
+}

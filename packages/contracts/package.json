@@ -1,0 +1,28 @@
+{
+  "name": "@autotos/contracts",
+  "version": "0.1.0",
+  "description": "Shared data contracts for AutoTOS: schemas, taxonomy, alias table, and validators. The generator↔client hinge.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./taxonomy.json": "./src/taxonomy.json",
+    "./domain.schema.json": "./src/domain.schema.json"
+  },
+  "files": [
+    "dist",
+    "src/taxonomy.json",
+    "src/domain.schema.json"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  }
+}
