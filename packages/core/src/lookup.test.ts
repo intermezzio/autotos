@@ -167,7 +167,7 @@ test("requestAnalysis POSTs the domain and returns the parsed response", async (
   });
 });
 
-test("requestAnalysis reports rejected when the network throws", async () => {
+test("requestAnalysis reports unreachable when the network throws", async () => {
   const fetchImpl: FetchLike = async () => {
     throw new Error("offline");
   };
@@ -176,14 +176,28 @@ test("requestAnalysis reports rejected when the network throws", async () => {
     endpoint: "https://api.test/request",
   });
   assert.equal(res.ok, false);
-  assert.equal(res.status, "rejected");
+  assert.equal(res.status, "unreachable");
   assert.match(res.message ?? "", /offline/);
 });
 
-test("requestAnalysis falls back to status from HTTP code on unparseable body", async () => {
+test("requestAnalysis treats a 5xx as unreachable (retryable)", async () => {
   const fetchImpl: FetchLike = async () => ({
     ok: false,
-    status: 500,
+    status: 503,
+    json: async () => ({ garbage: true }),
+  });
+  const res = await requestAnalysis("github.com", undefined, {
+    fetchImpl,
+    endpoint: "https://api.test/request",
+  });
+  assert.equal(res.status, "unreachable");
+  assert.match(res.message ?? "", /503/);
+});
+
+test("requestAnalysis reports rejected on a 4xx (terminal, do not retry)", async () => {
+  const fetchImpl: FetchLike = async () => ({
+    ok: false,
+    status: 400,
     json: async () => ({ garbage: true }),
   });
   const res = await requestAnalysis("github.com", undefined, {
@@ -191,4 +205,5 @@ test("requestAnalysis falls back to status from HTTP code on unparseable body", 
     endpoint: "https://api.test/request",
   });
   assert.equal(res.status, "rejected");
+  assert.equal(res.ok, false);
 });

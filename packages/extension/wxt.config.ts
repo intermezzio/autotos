@@ -13,9 +13,12 @@ export default defineConfig({
     // script derives the domain locally and the popup does the network calls.
     permissions: ["activeTab", "storage"],
     // The store host (CDN) and the request endpoint (Worker) we talk to.
+    // Production custom domains + the *.workers.dev preview URLs used by dev builds.
     host_permissions: [
       "https://data.autotos.me/*",
       "https://api.autotos.me/*",
+      "https://autotos-data.amascillaro.workers.dev/*",
+      "https://autotos-request.amascillaro.workers.dev/*",
     ],
     action: {
       default_title: "AutoTOS",

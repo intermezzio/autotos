@@ -101,6 +101,21 @@ export interface RequestDeps {
   endpoint: string;
 }
 
+/**
+ * Outcome of a request attempt, as seen by the client. Extends the wire status
+ * with a client-only `"unreachable"`: the Worker (or network) couldn't be
+ * reached, so nothing was recorded and the caller may safely retry later.
+ * `rejected` means the Worker *did* answer and declined — do NOT retry.
+ */
+export type RequestStatus = AnalysisRequestResponse["status"] | "unreachable";
+
+export interface RequestOutcome {
+  ok: boolean;
+  status: RequestStatus;
+  count?: number;
+  message?: string;
+}
+
 /** Build the request body, clamping hintUrls to the contract's max of 8. */
 export function buildAnalysisRequest(
   domain: string,
@@ -120,22 +135,36 @@ export async function requestAnalysis(
   domain: string,
   hintUrls: string[] | undefined,
   deps: RequestDeps,
-): Promise<AnalysisRequestResponse> {
+): Promise<RequestOutcome> {
   const body = buildAnalysisRequest(domain, hintUrls);
+  let res: Awaited<ReturnType<FetchLike>>;
   try {
-    const res = await deps.fetchImpl(deps.endpoint, {
+    res = await deps.fetchImpl(deps.endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    const parsed = AnalysisRequestResponseSchema.safeParse(await res.json());
-    if (parsed.success) return parsed.data;
-    return { ok: res.ok, status: res.ok ? "queued" : "rejected" };
   } catch (err) {
+    // Transport failure: the Worker was never reached. Nothing recorded, so the
+    // caller can queue this and retry — distinct from a Worker-side rejection.
     return {
       ok: false,
-      status: "rejected",
+      status: "unreachable",
       message: err instanceof Error ? err.message : "Network error",
     };
   }
+
+  // A 5xx is the Worker (or its edge) failing, not a considered rejection —
+  // treat it as retryable too. Only a well-formed answer or a 4xx is terminal.
+  if (res.status >= 500) {
+    return { ok: false, status: "unreachable", message: `HTTP ${res.status}` };
+  }
+
+  try {
+    const parsed = AnalysisRequestResponseSchema.safeParse(await res.json());
+    if (parsed.success) return parsed.data;
+  } catch {
+    // fall through to the HTTP-code-based outcome below
+  }
+  return { ok: res.ok, status: res.ok ? "queued" : "rejected" };
 }

@@ -115,8 +115,24 @@ export const AnalysisRequestResponseSchema = z.object({
   ok: z.boolean(),
   /** Where the analysis will appear once generated. */
   status: z.enum(["queued", "already_present", "rejected"]),
+  /** Total number of times this site has been requested (the demand tally). */
+  count: z.number().int().nonnegative().optional(),
   message: z.string().optional(),
 });
 export type AnalysisRequestResponse = z.infer<
   typeof AnalysisRequestResponseSchema
 >;
+
+/** A single entry in the missing-site tally (GET /missing). */
+export const MissingSiteSchema = z.object({
+  domain: DomainName,
+  count: z.number().int().nonnegative(),
+});
+export type MissingSite = z.infer<typeof MissingSiteSchema>;
+
+/** Response of GET /missing — the ranked tally of requested-but-unanalyzed sites. */
+export const MissingTallySchema = z.object({
+  generatedAt: z.string().datetime().optional(),
+  sites: z.array(MissingSiteSchema),
+});
+export type MissingTally = z.infer<typeof MissingTallySchema>;

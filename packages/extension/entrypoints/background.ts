@@ -1,5 +1,6 @@
 import { defineBackground } from "wxt/sandbox";
 import { getAliasMap } from "../lib/alias-cache.js";
+import { flushOutbox } from "../lib/request-outbox.js";
 
 // The AutoTOS background is intentionally minimal. The heavy lifting (lookup,
 // rendering, request button) lives in the popup, which only runs when the user
@@ -8,4 +9,6 @@ import { getAliasMap } from "../lib/alias-cache.js";
 export default defineBackground(() => {
   // Prime the alias-map cache in the background (best-effort).
   void getAliasMap().catch(() => {});
+  // Deliver any requests queued while the tally Worker was unreachable.
+  void flushOutbox().catch(() => {});
 });
