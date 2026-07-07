@@ -160,10 +160,31 @@ body {
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+.finding--good {
+  background: var(--good-bg);
+  border-color: color-mix(in srgb, var(--good) 25%, transparent);
+}
+.finding--bad {
+  background: var(--bad-bg);
+  border-color: color-mix(in srgb, var(--bad) 25%, transparent);
+}
+.finding--neutral {
+  background: var(--neutral-bg);
+  border-color: color-mix(in srgb, var(--neutral) 20%, transparent);
+}
 .finding__icon {
   flex: 0 0 auto;
-  font-size: 15px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.finding--good .finding__icon {
+  color: var(--good);
+}
+.finding--bad .finding__icon {
+  color: var(--bad);
+}
+.finding--neutral .finding__icon {
+  color: var(--neutral);
 }
 .finding__body {
   flex: 1;
@@ -185,7 +206,8 @@ body {
   margin: 6px 0 0;
   padding: 8px 10px;
   border-left: 3px solid var(--border);
-  background: var(--neutral-bg);
+  /* Neutral inset that reads on any tinted finding background. */
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
   color: var(--muted);
   font-size: 12px;
   border-radius: 0 6px 6px 0;

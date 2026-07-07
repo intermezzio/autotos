@@ -167,10 +167,17 @@ function renderMiss(domain: string, pageUrl: string): void {
     if (res.ok || res.status === "already_present") {
       button.hidden = true;
       status.className = "request-status request-status--ok";
-      status.textContent =
-        res.status === "already_present"
-          ? "Analysis is on its way — check back shortly."
-          : "Thanks! We've queued this site for analysis.";
+      if (res.message) {
+        // A specific message (e.g. saved-offline) takes precedence.
+        status.textContent = res.message;
+      } else {
+        const demand =
+          res.count && res.count > 1 ? ` You're one of ${res.count} people who asked.` : "";
+        status.textContent =
+          (res.status === "already_present"
+            ? "Analysis is on its way — check back shortly."
+            : "Thanks! We've queued this site for analysis.") + demand;
+      }
     } else {
       button.disabled = false;
       button.textContent = "Request analysis";
@@ -193,8 +200,9 @@ function sortFindings(findings: readonly Finding[]): Finding[] {
   );
 }
 
-function effectIcon(effect: Finding["effect"]): string {
-  return effect === "good" ? "\u{1F44D}" : effect === "bad" ? "\u{1F44E}" : "\u{2139}\u{FE0F}";
+function effectIcon(_effect: Finding["effect"]): string {
+  // A filled circle; color is applied per-effect via the .finding--{effect} class.
+  return "●";
 }
 
 function verdictLabel(v: ReturnType<typeof scoreVerdict>): string {
