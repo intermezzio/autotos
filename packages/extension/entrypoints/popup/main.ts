@@ -3,6 +3,7 @@ import { toRegistrableDomain, resolveCanonical, scoreVerdict, scoreGrade, gradeL
 import type { DomainAnalysis, Finding } from "@autotos/contracts";
 import { getAliasMap } from "../../lib/alias-cache.js";
 import { lookupForUrl, requestAnalysis, type LookupResult } from "../../lib/store.js";
+import { iconStateFor, setTabIcon } from "../../lib/icon.js";
 
 const content = document.getElementById("content")!;
 const domainLabel = document.getElementById("domain-label")!;
@@ -15,6 +16,10 @@ async function main(): Promise<void> {
 
   const result = await lookupForUrl(url);
   render(result, url);
+
+  // Reflect the site's grade on the toolbar icon for this tab (grayed "?" if we
+  // have no grade). Scoped to the tab so it persists after the popup closes.
+  void setTabIcon(tab?.id, iconStateFor(result));
 }
 
 async function getActiveTab(): Promise<browser.Tabs.Tab | undefined> {

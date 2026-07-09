@@ -18,9 +18,21 @@ export default defineConfig({
       "https://autotos-data.amascillaro.workers.dev/*",
       "https://autotos-request.amascillaro.workers.dev/*",
     ],
+    // Default (per-tab) toolbar icon: grayed "?" until we know the site's grade.
+    // The popup swaps in the A–E badge for a tab once it's looked up (activeTab).
     action: {
       default_title: "AutoTOS",
       default_popup: "popup.html",
+      default_icon: {
+        16: "icon/unknown-16.png",
+        32: "icon/unknown-32.png",
+      },
+    },
+    icons: {
+      16: "icon/unknown-16.png",
+      32: "icon/unknown-32.png",
+      48: "icon/unknown-48.png",
+      128: "icon/unknown-128.png",
     },
     // Firefox requires an explicit add-on id.
     ...(browser === "firefox"
