@@ -18,9 +18,9 @@ import aliasTableJson from "./alias-table.json" with { type: "json" };
 
 // --- taxonomy ---------------------------------------------------------------
 
-test("taxonomy parses and exposes 17 clauses", () => {
-  assert.equal(TAXONOMY.clauses.length, 17);
-  assert.equal(CLAUSE_KEYS.length, 17);
+test("taxonomy parses and exposes 30 clauses", () => {
+  assert.equal(TAXONOMY.clauses.length, 30);
+  assert.equal(CLAUSE_KEYS.length, 30);
 });
 
 test("taxonomy clause keys are unique", () => {
@@ -32,6 +32,22 @@ test("every clause has a valid effect and 0-100 weight", () => {
     assert.ok(["good", "bad", "neutral"].includes(c.effect), `${c.key} effect`);
     assert.ok(c.weight >= 0 && c.weight <= 100, `${c.key} weight`);
     assert.match(c.key, /^[a-z0-9_]+$/, `${c.key} key format`);
+  }
+});
+
+test("every clause references a defined category", () => {
+  for (const c of TAXONOMY.clauses) {
+    assert.ok(TAXONOMY.categories[c.category], `${c.key} -> unknown category ${c.category}`);
+  }
+});
+
+test("every bad clause's category has a non-zero penalty", () => {
+  for (const c of TAXONOMY.clauses) {
+    if (c.effect !== "bad") continue;
+    assert.ok(
+      TAXONOMY.categories[c.category]!.penalty > 0,
+      `${c.key} is bad but category ${c.category} has zero penalty`,
+    );
   }
 });
 

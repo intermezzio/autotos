@@ -1,11 +1,30 @@
 {
-  "version": 1,
+  "version": 3,
+  "categories": {
+    "data_sale": { "label": "Selling personal data", "penalty": 25 },
+    "terms_changes": { "label": "Changing the terms", "penalty": 22 },
+    "legal_rights": { "label": "Your legal rights", "penalty": 20 },
+    "ai_data_use": { "label": "AI training on your data", "penalty": 16 },
+    "content_rights": { "label": "Rights over your content", "penalty": 16 },
+    "account_termination": { "label": "Account termination", "penalty": 14 },
+    "tracking": { "label": "Tracking and advertising", "penalty": 12 },
+    "data_retention": { "label": "Data retention", "penalty": 8 },
+    "liability": { "label": "Liability and warranties", "penalty": 8 },
+    "data_transfer": { "label": "Where your data is stored", "penalty": 5 },
+    "data_rights": { "label": "Your data rights", "penalty": 0 },
+    "data_security": { "label": "Data security", "penalty": 0 },
+    "account_security": { "label": "Account security", "penalty": 0 },
+    "communications": { "label": "Marketing communications", "penalty": 0 },
+    "eligibility": { "label": "Eligibility", "penalty": 0 },
+    "transparency": { "label": "Transparency", "penalty": 0 }
+  },
   "clauses": [
     {
       "key": "has_last_updated_date",
       "title": "Has a last-updated date",
       "effect": "neutral",
       "weight": 5,
+      "category": "transparency",
       "guidance": "The terms clearly state when they were last revised."
     },
     {
@@ -13,6 +32,7 @@
       "title": "Only available to users of a certain age",
       "effect": "neutral",
       "weight": 15,
+      "category": "eligibility",
       "guidance": "Use of the service is restricted to users above a minimum age."
     },
     {
@@ -20,6 +40,7 @@
       "title": "Tracking pixels and/or device fingerprinting",
       "effect": "bad",
       "weight": 50,
+      "category": "tracking",
       "guidance": "The service uses tracking pixels, web beacons, or device fingerprinting to identify or track users."
     },
     {
@@ -27,6 +48,7 @@
       "title": "Service provided 'as is' with no warranty of uninterrupted or accurate service",
       "effect": "bad",
       "weight": 20,
+      "category": "liability",
       "guidance": "The service disclaims warranties and does not guarantee uptime, accuracy, or error-free operation."
     },
     {
@@ -34,6 +56,7 @@
       "title": "You must defend, indemnify, and hold the service harmless",
       "effect": "bad",
       "weight": 60,
+      "category": "liability",
       "guidance": "The user agrees to indemnify the service against claims arising from the user's use."
     },
     {
@@ -41,6 +64,7 @@
       "title": "Ignores the Do Not Track (DNT) browser signal",
       "effect": "bad",
       "weight": 60,
+      "category": "tracking",
       "guidance": "The service explicitly states it does not honor Do Not Track headers."
     },
     {
@@ -48,6 +72,7 @@
       "title": "Can delete your account or content without prior notice or reason",
       "effect": "bad",
       "weight": 60,
+      "category": "account_termination",
       "guidance": "The service reserves the right to terminate accounts or remove content without warning or justification."
     },
     {
@@ -55,6 +80,7 @@
       "title": "Terms may change at any time without notice to the user",
       "effect": "bad",
       "weight": 70,
+      "category": "terms_changes",
       "guidance": "The service may modify the terms unilaterally and is not required to notify users."
     },
     {
@@ -62,6 +88,7 @@
       "title": "You are responsible for your account's security and activity",
       "effect": "neutral",
       "weight": 10,
+      "category": "account_security",
       "guidance": "The user bears responsibility for safeguarding credentials and for activity on the account; the service disclaims liability."
     },
     {
@@ -69,6 +96,7 @@
       "title": "Does not sell your personal data",
       "effect": "good",
       "weight": 60,
+      "category": "data_sale",
       "guidance": "The service commits to not selling users' personal data to third parties."
     },
     {
@@ -76,6 +104,7 @@
       "title": "You can request access to and deletion of your personal data",
       "effect": "good",
       "weight": 50,
+      "category": "data_rights",
       "guidance": "Users have the right to access and delete the personal data the service holds about them."
     },
     {
@@ -83,6 +112,7 @@
       "title": "Can sell your personal data",
       "effect": "bad",
       "weight": 50,
+      "category": "data_sale",
       "guidance": "The service reserves the right to sell or share users' personal data with third parties for value."
     },
     {
@@ -90,6 +120,7 @@
       "title": "Your data may be processed and stored anywhere in the world",
       "effect": "bad",
       "weight": 10,
+      "category": "data_transfer",
       "guidance": "The service may transfer and store data in jurisdictions other than the user's own."
     },
     {
@@ -97,6 +128,7 @@
       "title": "Uses third-party cookies for statistics and/or advertising",
       "effect": "bad",
       "weight": 70,
+      "category": "tracking",
       "guidance": "The service sets third-party cookies for analytics or advertising purposes."
     },
     {
@@ -104,6 +136,7 @@
       "title": "You can opt out of promotional communications",
       "effect": "good",
       "weight": 50,
+      "category": "communications",
       "guidance": "Users may unsubscribe from marketing or promotional messages."
     },
     {
@@ -111,6 +144,7 @@
       "title": "You have the right to leave the service at any time",
       "effect": "good",
       "weight": 15,
+      "category": "account_termination",
       "guidance": "Users may close their account and stop using the service whenever they choose."
     },
     {
@@ -118,7 +152,112 @@
       "title": "You will be notified when the terms change",
       "effect": "good",
       "weight": 30,
+      "category": "terms_changes",
       "guidance": "The service commits to notifying users of material changes to the terms."
+    },
+    {
+      "key": "you_own_your_content",
+      "title": "You retain ownership of the content you create",
+      "effect": "good",
+      "weight": 50,
+      "category": "content_rights",
+      "guidance": "The user retains intellectual property rights and ownership of content they upload or create using the service."
+    },
+    {
+      "key": "broad_content_license",
+      "title": "You grant a broad license to your content",
+      "effect": "bad",
+      "weight": 50,
+      "category": "content_rights",
+      "guidance": "The user grants the service an irrevocable, perpetual, worldwide, royalty-free, sublicensable, or otherwise broad license to use their content."
+    },
+    {
+      "key": "class_action_waiver",
+      "title": "You waive your right to a class-action lawsuit",
+      "effect": "bad",
+      "weight": 60,
+      "category": "legal_rights",
+      "guidance": "The user waives their right to participate in class-action lawsuits or class-wide arbitration against the service."
+    },
+    {
+      "key": "binding_arbitration",
+      "title": "Disputes must go through binding arbitration",
+      "effect": "bad",
+      "weight": 55,
+      "category": "legal_rights",
+      "guidance": "The user agrees that disputes must be resolved through mandatory binding arbitration rather than in court or by jury trial."
+    },
+    {
+      "key": "offers_two_factor_auth",
+      "title": "Two-factor authentication is offered",
+      "effect": "good",
+      "weight": 20,
+      "category": "account_security",
+      "guidance": "The service offers two-factor authentication or multi-factor authentication to help protect user accounts from unauthorized access."
+    },
+    {
+      "key": "notifies_of_data_breach",
+      "title": "You will be notified of a data breach",
+      "effect": "good",
+      "weight": 40,
+      "category": "data_security",
+      "guidance": "The service commits to notifying users if a data breach or security incident affects their personal information."
+    },
+    {
+      "key": "data_retained_after_deletion",
+      "title": "Your data may be retained after you delete your account",
+      "effect": "bad",
+      "weight": 40,
+      "category": "data_retention",
+      "guidance": "User data or backups may continue to exist after account deletion, either indefinitely or for an extended period."
+    },
+    {
+      "key": "governing_law_disclosed",
+      "title": "The governing law / jurisdiction is disclosed",
+      "effect": "neutral",
+      "weight": 10,
+      "category": "transparency",
+      "guidance": "The terms clearly identify the governing law or legal jurisdiction that applies to disputes with the service."
+    },
+    {
+      "key": "content_used_for_ai_training",
+      "title": "Your content may be used to train AI models",
+      "effect": "bad",
+      "weight": 60,
+      "category": "ai_data_use",
+      "guidance": "User-generated content or data may be used to train, fine-tune, or improve machine learning or artificial intelligence models."
+    },
+    {
+      "key": "ai_training_opt_out",
+      "title": "You can opt out of AI training on your content",
+      "effect": "good",
+      "weight": 45,
+      "category": "ai_data_use",
+      "guidance": "Users have the ability to opt out of having their content or data used for AI or machine learning model training."
+    },
+    {
+      "key": "ai_output_no_warranty",
+      "title": "AI-generated output is provided without warranty of accuracy",
+      "effect": "neutral",
+      "weight": 15,
+      "category": "liability",
+      "guidance": "The service disclaims accuracy, reliability, or fitness of AI-generated or automated outputs, and users should verify information independently."
+    },
+    {
+      "key": "automated_decision_human_review",
+      "title": "You can request human review of automated decisions",
+      "effect": "good",
+      "weight": 35,
+      "category": "data_rights",
+      "guidance": "Users have the right to contest automated or algorithmic decisions and request human review, similar to GDPR Article 22 rights."
+    },
+    {
+      "key": "shares_data_with_ai_third_parties",
+      "title": "Your data may be shared with third-party AI providers",
+      "effect": "bad",
+      "weight": 55,
+      "category": "ai_data_use",
+      "guidance": "User data is sent to or shared with external third-party AI or large language model vendors for processing or analysis."
     }
   ]
 }

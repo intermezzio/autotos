@@ -1,0 +1,24 @@
+{
+  "name": "@autotos/generator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Service 3 — offline analysis generator. Fetches TOS/privacy pages over plain HTTP, classifies clauses with an LLM (structured output, taxonomy-constrained), and emits validated domain.json artifacts.",
+  "type": "module",
+  "bin": {
+    "autotos-generate": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test \"dist/**/*.test.js\"",
+    "generate": "npm run build && node dist/cli.js"
+  },
+  "dependencies": {
+    "@autotos/contracts": "0.1.0",
+    "@autotos/core": "0.1.0",
+    "cheerio": "^1.0.0"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.30.0"
+  }
+}

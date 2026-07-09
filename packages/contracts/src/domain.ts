@@ -21,6 +21,8 @@ export const FindingSchema = z.object({
   title: z.string().optional(),
   effect: Effect,
   weight: z.number().int().min(0).max(100),
+  /** Denormalized category key (see taxonomy) so scoring/UI can group without the taxonomy. */
+  category: z.string().regex(/^[a-z0-9_]+$/).optional(),
   confidence: z.number().min(0).max(1).optional(),
   /** Verbatim span from the source text supporting the finding. */
   evidence: z.string(),

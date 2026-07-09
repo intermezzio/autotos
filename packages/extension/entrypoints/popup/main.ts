@@ -1,5 +1,5 @@
 import browser from "webextension-polyfill";
-import { toRegistrableDomain, resolveCanonical, scoreVerdict } from "@autotos/core";
+import { toRegistrableDomain, resolveCanonical, scoreVerdict, scoreGrade, gradeLabel } from "@autotos/core";
 import type { DomainAnalysis, Finding } from "@autotos/contracts";
 import { getAliasMap } from "../../lib/alias-cache.js";
 import { lookupForUrl, requestAnalysis, type LookupResult } from "../../lib/store.js";
@@ -56,6 +56,7 @@ function renderAnalysis(analysis: DomainAnalysis): void {
   const findings = analysis.findings ?? [];
   const score = analysis.score ?? 5;
   const verdict = scoreVerdict(score);
+  const grade = scoreGrade(score);
 
   const root = document.createElement("div");
   root.className = "state analysis";
@@ -64,8 +65,9 @@ function renderAnalysis(analysis: DomainAnalysis): void {
   const scoreEl = document.createElement("div");
   scoreEl.className = `score score--${verdict}`;
   scoreEl.innerHTML = `
+    <div class="score__grade">${grade}</div>
     <div class="score__number">${score.toFixed(1)}<span class="score__max">/10</span></div>
-    <div class="score__verdict">${verdictLabel(verdict)}</div>
+    <div class="score__verdict">${gradeLabel(grade)}</div>
   `;
   root.appendChild(scoreEl);
 
@@ -203,10 +205,6 @@ function sortFindings(findings: readonly Finding[]): Finding[] {
 function effectIcon(_effect: Finding["effect"]): string {
   // A filled circle; color is applied per-effect via the .finding--{effect} class.
   return "●";
-}
-
-function verdictLabel(v: ReturnType<typeof scoreVerdict>): string {
-  return v === "good" ? "User-friendly" : v === "bad" ? "Unfriendly" : "Mixed";
 }
 
 function message(title: string, bodyHtml: string): string {
