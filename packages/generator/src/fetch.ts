@@ -13,7 +13,7 @@ export interface FetchOptions {
 }
 
 const DEFAULT_UA =
-  "Mozilla/5.0 (compatible; AutoTOSBot/1.0; +https://autotos.me/bot)";
+  "Mozilla/5.0 (compatible; AutoTOSBot/1.0; +https://github.com/intermezzio/autotos)";
 const DEFAULT_TIMEOUT = 15_000;
 const DEFAULT_MAX_BYTES = 3_000_000; // 3 MB of HTML is plenty for a legal page
 const DEFAULT_MAX_META_REFRESH_HOPS = 3;

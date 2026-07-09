@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://autotos.me/schema/v1/domain.schema.json",
+  "$id": "https://autotos-data.amascillaro.workers.dev/schema/v1/domain.schema.json",
   "title": "AutoTOS domain analysis artifact",
   "description": "One analysis file per registrable domain (eTLD+1). Written by the generator, read by the extension. Stored at /v1/analysis/{domain}.json on the CDN.",
   "type": "object",

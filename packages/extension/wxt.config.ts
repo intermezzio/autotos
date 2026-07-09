@@ -13,10 +13,8 @@ export default defineConfig({
     // script derives the domain locally and the popup does the network calls.
     permissions: ["activeTab", "storage"],
     // The store host (CDN) and the request endpoint (Worker) we talk to.
-    // Production custom domains + the *.workers.dev preview URLs used by dev builds.
+    // No custom domain yet — the *.workers.dev URLs are the live endpoints.
     host_permissions: [
-      "https://data.autotos.me/*",
-      "https://api.autotos.me/*",
       "https://autotos-data.amascillaro.workers.dev/*",
       "https://autotos-request.amascillaro.workers.dev/*",
     ],
@@ -29,7 +27,7 @@ export default defineConfig({
       ? {
           browser_specific_settings: {
             gecko: {
-              id: "autotos@autotos.me",
+              id: "autotos@amascillaro.workers.dev",
               strict_min_version: "115.0",
             },
           },

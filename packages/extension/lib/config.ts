@@ -1,20 +1,16 @@
 // Central config for where the extension reads data and posts requests.
 // These are data/infra endpoints, deliberately not baked into logic elsewhere.
 
-// Dev builds hit the Cloudflare *.workers.dev preview URLs directly; production
-// builds use the custom domains (wired once autotos.me is on Cloudflare). Toggle
-// is import.meta.env.DEV, set by WXT/Vite (`wxt dev` => true, `wxt build` => false).
-const DEV = import.meta.env.DEV;
+// No custom domain yet, so both dev and production builds talk directly to the
+// Cloudflare *.workers.dev URLs. When a custom domain is added later, branch these
+// on import.meta.env.DEV (set by WXT/Vite: `wxt dev` => true, `wxt build` => false).
 
-/** CDN base for static analysis artifacts (autotos-data Worker / Pages). */
-export const STORE_BASE = DEV
-  ? "https://autotos-data.amascillaro.workers.dev"
-  : "https://data.autotos.me";
+/** CDN base for static analysis artifacts (autotos-data Worker). */
+export const STORE_BASE = "https://autotos-data.amascillaro.workers.dev";
 
 /** Worker endpoint that logs a "please analyze this site" request. */
-export const REQUEST_ENDPOINT = DEV
-  ? "https://autotos-request.amascillaro.workers.dev/request"
-  : "https://api.autotos.me/request";
+export const REQUEST_ENDPOINT =
+  "https://autotos-request.amascillaro.workers.dev/request";
 
 /** Path template for a domain's analysis file. */
 export const analysisUrl = (domain: string): string =>
