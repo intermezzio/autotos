@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { TAXONOMY } from "@autotos/contracts";
 import type { FetchLike } from "./types.js";
 import { classifyLink, toAbsolute, discover } from "./discover.js";
+import { lookupOpenTermsArchive, guessServiceFilenames } from "./open-terms-archive.js";
 import { extractText, normalizeWhitespace, hashContent, isUsable, MIN_USABLE_CHARS } from "./extract.js";
 import { groupClauses, classify, GROUP_SIZE, chunkDocument, MAX_CHUNK_CHARS, type RawFinding } from "./classify.js";
 import { verifyFindings } from "./verify.js";
@@ -60,6 +61,87 @@ test("discover merges hints, homepage links, and well-known paths (deduped, capp
   assert.ok(urls.includes("https://e.com/terms"));
   assert.ok(!urls.some((u) => u.includes("careers")), "non-legal links dropped");
   assert.ok(candidates.length <= 5, "respects max");
+});
+
+// --- open terms archive -----------------------------------------------------
+
+const RAW = "https://raw.githubusercontent.com/OpenTermsArchive/contrib-declarations/main/declarations";
+const CONTENTS = "https://api.github.com/repos/OpenTermsArchive/contrib-declarations/contents/declarations";
+
+const githubDecl = JSON.stringify({
+  name: "GitHub",
+  terms: {
+    "Terms of Service": { fetch: "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service" },
+    "Privacy Policy": { fetch: "https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" },
+    "Copyright Claims Policy": { fetch: "https://docs.github.com/en/site-policy/content-removal-policies/dmca-takedown-policy" },
+  },
+});
+
+test("guessServiceFilenames derives capitalized service names from a domain", () => {
+  const names = guessServiceFilenames("github.com");
+  assert.ok(names.includes("Github.json"));
+  assert.ok(names.includes("github.json"));
+});
+
+test("OTA lookup: matches a service by filename guess and returns terms-first candidates", async () => {
+  const fetchImpl = mockFetch({
+    [`${RAW}/Github.json`]: { body: githubDecl, contentType: "application/json" },
+  });
+  const candidates = await lookupOpenTermsArchive("github.com", { fetchImpl });
+  assert.equal(candidates.length, 2, "keeps only ToS + Privacy (drops copyright policy)");
+  assert.equal(candidates[0]?.kind, "terms", "terms first");
+  assert.equal(candidates[1]?.kind, "privacy");
+  assert.match(candidates[0]?.url ?? "", /github-terms-of-service/);
+});
+
+test("OTA lookup: drops documents that live off the requested domain", async () => {
+  // Declaration matches on the ToS host but bundles an off-domain privacy link.
+  const decl = JSON.stringify({
+    name: "Example",
+    terms: {
+      "Terms of Service": { fetch: "https://example.com/tos" },
+      "Privacy Policy": { fetch: "https://tracker.other.com/privacy" },
+    },
+  });
+  const fetchImpl = mockFetch({ [`${RAW}/Example.json`]: { body: decl, contentType: "application/json" } });
+  const candidates = await lookupOpenTermsArchive("example.com", { fetchImpl });
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0]?.url, "https://example.com/tos");
+});
+
+test("OTA lookup: falls back to the directory listing when the name isn't guessable", async () => {
+  const listing = JSON.stringify([
+    { name: "Unrelated.json" },
+    { name: "MyCoolApp.json" },
+    { name: "MyCoolApp.history.json" }, // must be ignored
+  ]);
+  const decl = JSON.stringify({
+    name: "MyCoolApp",
+    terms: { "Terms of Service": { fetch: "https://mycoolapp.io/legal/terms" } },
+  });
+  const fetchImpl = mockFetch({
+    [CONTENTS]: { body: listing, contentType: "application/json" },
+    [`${RAW}/MyCoolApp.json`]: { body: decl, contentType: "application/json" },
+  });
+  const candidates = await lookupOpenTermsArchive("mycoolapp.io", { fetchImpl });
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0]?.url, "https://mycoolapp.io/legal/terms");
+});
+
+test("OTA lookup: returns [] when the service isn't in the archive", async () => {
+  const fetchImpl = mockFetch({ [CONTENTS]: { body: "[]", contentType: "application/json" } });
+  assert.deepEqual(await lookupOpenTermsArchive("nowhere.example", { fetchImpl }), []);
+});
+
+test("discover puts OTA-curated URLs ahead of well-known paths", async () => {
+  const fetchImpl = mockFetch({
+    [`${RAW}/Github.json`]: { body: githubDecl, contentType: "application/json" },
+    "https://github.com": { body: "<html></html>" },
+  });
+  const candidates = await discover("github.com", { fetchImpl, max: 6 });
+  const urls = candidates.map((c) => c.url);
+  assert.match(urls[0] ?? "", /github-terms-of-service/, "OTA terms URL leads");
+  assert.ok(urls.some((u) => u.includes("github-privacy-statement")));
 });
 
 // --- extract ----------------------------------------------------------------

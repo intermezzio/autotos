@@ -1,13 +1,15 @@
 // Stage 1: discover candidate TOS / privacy URLs for a domain — no crawler.
 //
-// Strategy, cheapest first:
-//   1. Well-known paths (/terms, /privacy, /legal, ...) on https://{domain}.
-//   2. Scan the homepage's <a> tags for links whose text/href look legal.
-//   3. Fold in any hintUrls the request button forwarded.
+// Strategy, best sources first:
+//   1. hintUrls forwarded by the request button.
+//   2. Open Terms Archive: community-curated ToS/privacy URLs for the service.
+//   3. Well-known paths (/terms, /privacy, /legal, ...) on https://{domain}.
+//   4. Scan the homepage's <a> tags for links whose text/href look legal.
 // The LLM tolerates imperfect page selection, so this stays deliberately simple.
 
 import * as cheerio from "cheerio";
 import { fetchHtml, type FetchOptions } from "./fetch.js";
+import { lookupOpenTermsArchive } from "./open-terms-archive.js";
 import type { Candidate } from "./types.js";
 
 /** Common paths, grouped by the kind of document they usually hold. */
@@ -51,11 +53,16 @@ export interface DiscoverOptions extends FetchOptions {
   hintUrls?: string[];
   /** Max candidates to return (keeps LLM cost bounded). */
   max?: number;
+  /** Skip the Open Terms Archive lookup (e.g. in tests / offline runs). */
+  skipOpenTermsArchive?: boolean;
+  /** Optional progress log, forwarded to the OTA lookup. */
+  log?: (msg: string) => void;
 }
 
 /**
  * Return an ordered, de-duped list of candidate documents for a domain.
- * Order matters: hints and well-known paths first, homepage-scraped links after.
+ * Order matters: hints first, then Open Terms Archive's curated URLs, then
+ * well-known paths, then homepage-scraped links.
  */
 export async function discover(
   domain: string,
@@ -69,6 +76,15 @@ export async function discover(
     kind: "other" as const,
   }));
 
+  // Open Terms Archive: curated, high-quality URLs when the service is known.
+  // Additive and best-effort — a failure or miss just yields no candidates here.
+  const fromOta = opts.skipOpenTermsArchive
+    ? []
+    : await lookupOpenTermsArchive(domain, {
+        fetchImpl: opts.fetchImpl,
+        log: opts.log,
+      }).catch(() => []);
+
   const wellKnown: Candidate[] = WELL_KNOWN.map((w) => ({
     url: `${origin}${w.path}`,
     kind: w.kind,
@@ -76,7 +92,7 @@ export async function discover(
 
   const fromHomepage = await scrapeHomepageLinks(origin, opts);
 
-  return dedupe([...hinted, ...fromHomepage, ...wellKnown]).slice(0, max);
+  return dedupe([...hinted, ...fromOta, ...fromHomepage, ...wellKnown]).slice(0, max);
 }
 
 /** Fetch the homepage and pull out links that look like legal documents. */

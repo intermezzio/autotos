@@ -1,6 +1,7 @@
 export * from "./types.js";
 export * from "./fetch.js";
 export * from "./discover.js";
+export * from "./open-terms-archive.js";
 export * from "./extract.js";
 export * from "./classify.js";
 export * from "./verify.js";

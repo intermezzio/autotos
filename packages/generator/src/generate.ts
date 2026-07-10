@@ -57,6 +57,7 @@ export async function generate(
     fetchImpl: deps.fetchImpl,
     hintUrls: deps.hintUrls,
     max: deps.maxCandidates ?? 4,
+    log,
   });
   if (candidates.length === 0) {
     log(`${domain}: no candidates`);
