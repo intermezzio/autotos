@@ -160,6 +160,20 @@ test("normalizeWhitespace collapses runs but keeps paragraph breaks", () => {
   assert.equal(normalizeWhitespace("a   b\n\n\n\nc"), "a b\n\nc");
 });
 
+test("normalizeWhitespace folds typographic punctuation to ASCII", () => {
+  // Curly apostrophe/quotes, en+em dash, ellipsis, non-breaking space.
+  const input = "you don’t “agree”—period… ok";
+  assert.equal(normalizeWhitespace(input), 'you don\'t "agree"-period... ok');
+});
+
+test("extractText folds smart quotes so evidence matches downstream", () => {
+  // The clause a classifier would quote as ASCII must be present verbatim in
+  // the extracted text, even though the HTML used curly quotes and an em dash.
+  const html = `<html><body><main><p>We provide the Service “AS IS” — you don’t get a warranty.</p></main></body></html>`;
+  const text = extractText(html);
+  assert.ok(text.includes('"AS IS" - you don\'t get a warranty'));
+});
+
 test("hashContent is stable hex and isUsable gates on length", () => {
   const h = hashContent("hello");
   assert.match(h, /^[a-f0-9]{64}$/);
@@ -234,16 +248,6 @@ test("verifyFindings matches across whitespace differences", () => {
   const source = "You    may\n\nleave the service at any time.";
   const raw: RawFinding[] = [
     { clauseKey: goodClause.key, present: true, evidence: "You may leave the service at any time", confidence: 1 },
-  ];
-  const { findings } = verifyFindings(raw, source);
-  assert.equal(findings.length, 1);
-});
-
-test("verifyFindings folds typographic punctuation (curly quotes, dashes)", () => {
-  // Source uses a curly apostrophe and an em dash; evidence uses ASCII.
-  const source = "If you don’t follow the rules — we reserve the right to close your account.";
-  const raw: RawFinding[] = [
-    { clauseKey: goodClause.key, present: true, evidence: "If you don't follow the rules - we reserve the right", confidence: 1 },
   ];
   const { findings } = verifyFindings(raw, source);
   assert.equal(findings.length, 1);

@@ -28,9 +28,25 @@ export function extractText(html: string): string {
   return normalizeWhitespace(raw);
 }
 
+/**
+ * Fold typographic punctuation to its ASCII equivalent: curly quotes/apostrophes,
+ * en/em dashes, and exotic spaces. HTML sources are full of these, and they carry
+ * no meaning for our purposes — folding them here (once, at extraction) means the
+ * stored document, the text the classifier reads, and the evidence it quotes are
+ * all in the same ASCII form, so downstream matching stays a plain string compare.
+ */
+export function foldTypography(s: string): string {
+  return s
+    .replace(/[‘’‚‛′‵]/g, "'") // ' ' ‚ ‛ ′ ‵ -> '
+    .replace(/[“”„‟″‶]/g, '"') // " " „ ‟ ″ ‶ -> "
+    .replace(/[‐‑‒–—―−]/g, "-") // ‐‑‒–—―− -> -
+    .replace(/…/g, "...") // … -> ...
+    .replace(/[       ]/g, " "); // nbsp/thin/etc -> space
+}
+
 /** Collapse runs of whitespace, keeping paragraph breaks readable. */
 export function normalizeWhitespace(s: string): string {
-  return s
+  return foldTypography(s)
     .replace(/\r\n?/g, "\n")
     .replace(/[ \t\f\v]+/g, " ")
     .replace(/\n[ \t]+/g, "\n")

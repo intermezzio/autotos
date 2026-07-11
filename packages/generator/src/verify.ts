@@ -9,27 +9,16 @@ import { getClause, type Finding } from "@autotos/contracts";
 import type { RawFinding } from "./classify.js";
 
 /**
- * Fold typographic punctuation to its ASCII equivalent so a quoted span isn't
- * rejected over a curly apostrophe vs a straight one, an en/em dash vs a hyphen,
- * etc. Extraction and copy-paste routinely swap these, and they carry no meaning
- * for evidence matching — but this is still exact-character folding, not fuzzing.
- */
-function foldPunct(s: string): string {
-  return s
-    .replace(/[‘’‚‛′‵]/g, "'") // ' ' ‚ ‛ ′ ‵ -> '
-    .replace(/[“”„‟″‶]/g, '"') // " " „ ‟ ″ ‶ -> "
-    .replace(/[‐‑‒–—―−]/g, "-") // ‐‑‒–—―− -> -
-    .replace(/[   ]/g, " "); // non-breaking / figure / narrow spaces
-}
-
-/**
- * Flatten ALL whitespace (incl. newlines) to single spaces, fold typographic
- * punctuation, and lowercase, so a quoted span matches regardless of the line
- * breaks or quote styling in the source. Lenient on spacing and punctuation
- * styling, but not fuzzy — the characters themselves must still match verbatim.
+ * Flatten ALL whitespace (incl. newlines) to single spaces and lowercase, so a
+ * quoted span matches regardless of the line breaks in the source. Lenient on
+ * spacing, but not fuzzy — the characters themselves must still match verbatim.
+ *
+ * Typographic punctuation (curly quotes, dashes, exotic spaces) is already
+ * folded to ASCII upstream in extract.ts, so both the source text and the
+ * classifier's quoted evidence are in the same form by the time they reach here.
  */
 function canonical(s: string): string {
-  return foldPunct(s).replace(/\s+/g, " ").trim().toLowerCase();
+  return s.replace(/\s+/g, " ").trim().toLowerCase();
 }
 
 /**
