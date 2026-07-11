@@ -239,6 +239,16 @@ test("verifyFindings matches across whitespace differences", () => {
   assert.equal(findings.length, 1);
 });
 
+test("verifyFindings folds typographic punctuation (curly quotes, dashes)", () => {
+  // Source uses a curly apostrophe and an em dash; evidence uses ASCII.
+  const source = "If you don’t follow the rules — we reserve the right to close your account.";
+  const raw: RawFinding[] = [
+    { clauseKey: goodClause.key, present: true, evidence: "If you don't follow the rules - we reserve the right", confidence: 1 },
+  ];
+  const { findings } = verifyFindings(raw, source);
+  assert.equal(findings.length, 1);
+});
+
 test("verifyFindings dedupes repeated clause keys", () => {
   const source = "We do not sell your personal data. We do not sell your personal data.";
   const raw: RawFinding[] = [
