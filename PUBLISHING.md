@@ -457,10 +457,123 @@ This document provides step-by-step instructions for publishing the AutoTOS brow
 
 ---
 
+## Automated Releases (GitHub Actions)
+
+The Chrome package is **not committed to git**. It's built on demand as a release
+artifact by `.github/workflows/release.yml`, which fires only when a version tag
+is pushed. This keeps the (binary, regenerable) zip out of git history while still
+producing a downloadable, uploadable artifact for every release.
+
+### Cutting a release
+
+```bash
+# 1. Bump the version in the manifest (source of truth for the build).
+cd packages/extension
+# edit package.json: "version": "0.2.0"
+npm install                    # refresh package-lock.json
+git commit -am "extension: v0.2.0"
+
+# 2. Tag with the matching version and push the tag.
+git tag v0.2.0
+git push origin main --tags
+```
+
+Pushing the `v0.2.0` tag triggers the workflow, which defines **two independent jobs**
+(`build` for Chrome, `firefox` for Firefox). They're deliberately decoupled so a
+store misconfiguration on one side can't block the other's release.
+
+> **Current status:** the **Chrome job is disabled** (`if: false` in `release.yml`)
+> until a Chrome Web Store developer account exists. Only the **Firefox job runs**.
+> Re-enable Chrome by deleting that `if: false` — the store-upload step stays
+> secret-gated, so it's still a safe no-op until the `CWS_*` secrets are set.
+
+Each job:
+
+1. **Verifies the tag matches `packages/extension/package.json`** — `v0.2.0` must
+   equal version `0.2.0`, or the job fails loudly (prevents a mislabeled build).
+2. **Builds + zips the package** — Chrome MV3, and Firefox MV2 (which also emits a
+   `-sources.zip`, required by AMO because the build is minified).
+3. **Uploads the zip(s) as workflow build artifacts** (downloadable from the Actions run).
+4. **Creates/updates the GitHub Release** for the tag and attaches the zip(s), with
+   auto-generated release notes. Both jobs attach to the same Release (idempotent).
+5. **Uploads to the store** — *only if* that store's secrets are configured (see below):
+   - **Chrome:** uploads a draft (no `--auto-publish`) — nothing goes live until a
+     human clicks **Publish** in the CWS dashboard.
+   - **Firefox:** submits the version to AMO's `listed` review queue via `web-ext`
+     (with the sources zip). Mozilla publishes it once its review passes — there's
+     no draft-only mode for listed add-ons.
+
+If a store's secrets aren't set, step 5 for that store is skipped cleanly and the
+workflow still produces the GitHub Release + artifacts — so you can download the
+zip and upload it by hand (the manual flow below still works exactly as before).
+
+### Chrome Web Store secrets (optional — enables auto-upload)
+
+Set these as repository secrets (`Settings → Secrets and variables → Actions`) to
+enable the auto-upload step. Until all four exist, the store step no-ops.
+
+| Secret | What it is / where to get it |
+|---|---|
+| `CWS_EXTENSION_ID` | The extension's ID from the CWS dashboard (the item must already exist — create it once by uploading the first zip manually). |
+| `CWS_CLIENT_ID` | OAuth client ID from a Google Cloud project with the **Chrome Web Store API** enabled. |
+| `CWS_CLIENT_SECRET` | OAuth client secret for that same client. |
+| `CWS_REFRESH_TOKEN` | A refresh token minted for that client with the `chromewebstore` scope. |
+
+To obtain the OAuth credentials, follow the `chrome-webstore-upload` setup guide:
+<https://github.com/fregante/chrome-webstore-upload/blob/main/How-to-generate-Google-API-keys.md>.
+Steps in brief: create a Google Cloud project → enable the Chrome Web Store API →
+create an OAuth client (type "Desktop app") → use the client to authorize once and
+capture the refresh token. The item itself must be created manually the first time
+(you can't create a brand-new listing via the API, only push new versions to an
+existing one).
+
+> **Note on the $5 developer account:** the store-upload step stays dormant until
+> you register a Chrome Web Store developer account, create the item, and add the
+> four secrets. Everything up to the GitHub Release works without any of that.
+
+### Firefox Add-ons (AMO) secrets (optional — enables auto-submit)
+
+Set these two repository secrets to enable the Firefox auto-submit step. Until both
+exist, the AMO step no-ops (the job still builds + attaches the zips to the Release).
+
+| Secret | What it is / where to get it |
+|---|---|
+| `AMO_JWT_ISSUER` | The **JWT issuer** (API key) from your AMO account: <https://addons.mozilla.org/developers/addon/api/key/>. Looks like `user:12345:67`. |
+| `AMO_JWT_SECRET` | The **JWT secret** shown on that same page (only displayed once — regenerate if lost). |
+
+Unlike Chrome, there are no OAuth client/refresh-token steps — AMO uses a single
+issuer/secret pair to mint short-lived JWTs, which `web-ext` handles internally.
+
+**Setting up the AMO account (first time):**
+
+1. **Create a Firefox account** and sign in at <https://addons.mozilla.org/developers/>.
+   AMO registration is **free** (no fee, unlike Chrome's $5).
+2. **Accept the Firefox Add-on Distribution Agreement** (prompted on first submission).
+3. **Generate API credentials** at <https://addons.mozilla.org/developers/addon/api/key/>:
+   click "Generate new credentials", copy the **JWT issuer** and **JWT secret**
+   immediately (the secret is shown only once).
+4. **Add them as repo secrets** (`Settings → Secrets and variables → Actions`) as
+   `AMO_JWT_ISSUER` and `AMO_JWT_SECRET`.
+5. **First submission creates the listing.** Unlike Chrome (where you must create
+   the item manually before the API can push to it), `web-ext sign --channel=listed`
+   can create a brand-new listed add-on on first run — but you'll still need to fill
+   out the listing metadata (description, screenshots, categories) in the AMO
+   dashboard afterward, and complete the listing before it can be publicly approved.
+   The add-on id is already pinned in `wxt.config.ts`
+   (`gecko.id = autotos@amascillaro.workers.dev`), so submissions map to the same
+   listing every time.
+
+> **AMO reviews the source.** Because the build is minified, Mozilla requires the
+> source zip (the workflow passes it via `--upload-source-code`). If a reviewer asks
+> for build steps, they're in the "Firefox AMO" section above. Reviews can take
+> 1–7 days and are done by a human comparing your source to the built artifact.
+
 ## Maintenance and Updates
 
 ### Version Updates
-When releasing a new version (e.g., `0.2.0`):
+
+For an automated release, see **Automated Releases** above — bump the version, tag,
+and push. To build/upload **manually** (Firefox and Safari have no CI yet):
 
 1. **Update version in package.json**
    ```bash
@@ -477,7 +590,7 @@ When releasing a new version (e.g., `0.2.0`):
    ```
 
 3. **Upload to stores**
-   - **Chrome:** Upload new zip in CWS dashboard → "Package" → "Upload new package"
+   - **Chrome:** Prefer the tagged release (CI). To do it by hand: upload the new zip in the CWS dashboard → "Package" → "Upload new package"
    - **Firefox:** Create new version in AMO → upload new zip + sources
    - **Safari:** Increment build number in Xcode → archive → upload → create new version in App Store Connect
 

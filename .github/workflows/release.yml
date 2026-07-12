@@ -1,0 +1,235 @@
+name: Release extension
+
+# Build the Chrome Web Store package as a RELEASE ARTIFACT — never committed to
+# git. It's generated only when a release tag is pushed, attached to the GitHub
+# Release, and (if the Chrome Web Store API secrets are configured) uploaded to
+# the store as a new draft version for a human to review and publish.
+#
+# Trigger: push a semver tag, e.g.
+#   git tag v0.2.0 && git push origin v0.2.0
+#
+# The tag MUST match packages/extension/package.json "version" (the job fails
+# otherwise) so the built zip's version and the release tag can never disagree.
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write # create the GitHub Release and upload the zip asset
+
+jobs:
+  build:
+    name: Build & release Chrome package
+    # DISABLED until a Chrome Web Store developer account + API credentials
+    # exist. Re-enable by removing this `if: false` (the store-upload step is
+    # already gated on the CWS_* secrets, so it stays a no-op draft-only upload
+    # until those are set).
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The tag is the source of truth for the release; the manifest version is
+      # the source of truth for the build. They must agree, or a "v0.2.0" release
+      # could ship a 0.1.0 zip. Fail loudly rather than publish a mislabeled build.
+      # GITHUB_REF_NAME is a trusted, GitHub-provided env var (the tag name).
+      - name: Verify tag matches manifest version
+        id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          tag="${REF_NAME#v}"
+          pkg="$(node -p "require('./packages/extension/package.json').version")"
+          echo "tag=$tag pkg=$pkg"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag v$tag does not match packages/extension version $pkg. Bump package.json or retag."
+            exit 1
+          fi
+          echo "version=$pkg" >> "$GITHUB_OUTPUT"
+
+      - name: Build & zip Chrome MV3 package
+        run: |
+          npm run build --workspace @autotos/extension -- -b chrome
+          npm run zip --workspace @autotos/extension -- -b chrome
+
+      # wxt names the zip autotosextension-<version>-chrome.zip under .output/.
+      - name: Locate artifact
+        id: artifact
+        run: |
+          zip="$(ls packages/extension/.output/*-chrome.zip)"
+          test -f "$zip" || { echo "::error::No chrome zip produced"; exit 1; }
+          echo "path=$zip" >> "$GITHUB_OUTPUT"
+          echo "Built $zip ($(du -h "$zip" | cut -f1))"
+
+      # Keep the zip as a build artifact (downloadable from the Actions run) even
+      # if the Release step or CWS upload is skipped.
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension-${{ steps.version.outputs.version }}
+          path: ${{ steps.artifact.outputs.path }}
+          if-no-files-found: error
+
+      # Attach the zip to the GitHub Release for this tag (created if absent).
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.artifact.outputs.path }}
+          generate_release_notes: true
+
+      # Upload to the Chrome Web Store as a NEW DRAFT version. Gated on the
+      # secrets existing (passed via env, then tested as shell vars — never
+      # interpolated into the script body), so it no-ops cleanly until a Chrome
+      # developer account + API credentials are configured. It uploads only — it
+      # does NOT publish — so nothing goes live without a human clicking
+      # "Publish" in the CWS dashboard.
+      - name: Check for Chrome Web Store credentials
+        id: cws
+        env:
+          CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: |
+          if [ -n "$CWS_EXTENSION_ID" ] && [ -n "$CWS_CLIENT_ID" ] \
+             && [ -n "$CWS_CLIENT_SECRET" ] && [ -n "$CWS_REFRESH_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Chrome Web Store secrets not set — skipping store upload. The zip is on the GitHub Release."
+          fi
+
+      - name: Upload to Chrome Web Store (draft, not published)
+        if: steps.cws.outputs.configured == 'true'
+        env:
+          EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+          ZIP: ${{ steps.artifact.outputs.path }}
+        run: |
+          npx --yes chrome-webstore-upload-cli@3 upload \
+            --source "$ZIP" \
+            --extension-id "$EXTENSION_ID" \
+            --client-id "$CLIENT_ID" \
+            --client-secret "$CLIENT_SECRET" \
+            --refresh-token "$REFRESH_TOKEN"
+          # Intentionally no `--auto-publish`: uploads a draft for human review.
+
+  firefox:
+    name: Build & release Firefox package
+    runs-on: ubuntu-latest
+    # Independent of the Chrome job on purpose: an AMO misconfiguration must not
+    # block the Chrome release, and vice versa. Both jobs attach their assets to
+    # the same GitHub Release for the tag (the release action is idempotent).
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tag matches manifest version
+        id: version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          tag="${REF_NAME#v}"
+          pkg="$(node -p "require('./packages/extension/package.json').version")"
+          echo "tag=$tag pkg=$pkg"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag v$tag does not match packages/extension version $pkg. Bump package.json or retag."
+            exit 1
+          fi
+          echo "version=$pkg" >> "$GITHUB_OUTPUT"
+
+      # wxt zip -b firefox emits BOTH the extension zip and a sources zip. AMO
+      # requires the sources zip for review because the build is minified.
+      - name: Build & zip Firefox MV2 package
+        run: |
+          npm run build --workspace @autotos/extension -- -b firefox
+          npm run zip --workspace @autotos/extension -- -b firefox
+
+      - name: Locate artifacts
+        id: artifact
+        run: |
+          ext="$(ls packages/extension/.output/*-firefox.zip)"
+          src="$(ls packages/extension/.output/*-sources.zip)"
+          test -f "$ext" || { echo "::error::No firefox zip produced"; exit 1; }
+          test -f "$src" || { echo "::error::No sources zip produced"; exit 1; }
+          echo "ext=$ext" >> "$GITHUB_OUTPUT"
+          echo "src=$src" >> "$GITHUB_OUTPUT"
+          echo "Built $ext + $src"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-extension-${{ steps.version.outputs.version }}
+          path: |
+            ${{ steps.artifact.outputs.ext }}
+            ${{ steps.artifact.outputs.src }}
+          if-no-files-found: error
+
+      # Attach both zips to the same GitHub Release the Chrome job creates.
+      - name: Create / update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.artifact.outputs.ext }}
+            ${{ steps.artifact.outputs.src }}
+          generate_release_notes: true
+
+      # Submit to addons.mozilla.org via Mozilla's official web-ext, gated on the
+      # AMO JWT credentials existing (passed via env, tested as shell vars — never
+      # interpolated into the script body). --channel=listed submits the version
+      # for AMO's review queue; it does NOT auto-publish (Mozilla publishes after
+      # a human/automated review passes). No-ops cleanly until secrets are set.
+      - name: Check for AMO credentials
+        id: amo
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          if [ -n "$AMO_JWT_ISSUER" ] && [ -n "$AMO_JWT_SECRET" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::AMO secrets not set — skipping Firefox store upload. The zips are on the GitHub Release."
+          fi
+
+      - name: Submit to Firefox Add-ons (listed, for review)
+        if: steps.amo.outputs.configured == 'true'
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          SOURCE_DIR: packages/extension/.output/firefox-mv2
+          SOURCE_ZIP: ${{ steps.artifact.outputs.src }}
+        run: |
+          npx --yes web-ext@8 sign \
+            --channel=listed \
+            --api-key "$AMO_JWT_ISSUER" \
+            --api-secret "$AMO_JWT_SECRET" \
+            --source-dir "$SOURCE_DIR" \
+            --upload-source-code "$SOURCE_ZIP" \
+            --artifacts-dir packages/extension/.output/web-ext-artifacts
+          # No auto-publish flag exists for listed channel — Mozilla publishes the
+          # version once its review passes. The sources zip is uploaded for that
+          # review (the build is minified); it's also on the GitHub Release as a
+          # fallback if a reviewer requests it manually.
