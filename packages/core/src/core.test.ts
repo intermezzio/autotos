@@ -42,13 +42,14 @@ test("computeScore returns a clean 10 with no findings", () => {
   assert.equal(computeScore([]), 10);
 });
 
-test("computeScore deducts one category penalty per distinct bad concern", () => {
+test("computeScore caps at the worst tier's ceiling for a single bad concern", () => {
   const findings: Finding[] = [
     { clauseKey: "does_not_sell_personal_data", effect: "good", weight: 60, evidence: "..." },
     { clauseKey: "terms_change_without_notice", effect: "bad", weight: 70, evidence: "..." },
   ];
-  // good clause ignored; terms_changes category penalty = 22; score = (100 - 22) / 10 = 7.8
-  assert.equal(computeScore(findings), 7.8);
+  // good clause ignored; terms_changes is a SEVERE concern: ceiling 5.9, one
+  // deduct of 1.0 => 5.9 - 1.0 = 4.9 (a C, the max grade a severe concern allows).
+  assert.equal(computeScore(findings), 4.9);
 });
 
 test("computeScore ignores good and neutral clauses entirely", () => {
@@ -65,18 +66,29 @@ test("computeScore counts a category once even with several bad clauses in it", 
     { clauseKey: "third_party_cookies_ads", effect: "bad", weight: 70, evidence: "..." },
     { clauseKey: "tracking_pixels_fingerprinting", effect: "bad", weight: 50, evidence: "..." },
   ];
-  // Both are category "tracking" (penalty 12); deducted ONCE => (100 - 12) / 10 = 8.8
-  assert.equal(computeScore(twoTracking), 8.8);
+  // Both are category "tracking" (MODERATE); one distinct concern => ceiling 7.9
+  // with a single moderate deduct of 0.6 => 7.9 - 0.6 = 7.3 (a B).
+  assert.equal(computeScore(twoTracking), 7.3);
 });
 
-test("computeScore sums penalties across distinct bad categories", () => {
+test("computeScore lets the worst tier dominate, with diminishing extra deducts", () => {
   const hostile: Finding[] = [
-    { clauseKey: "terms_change_without_notice", effect: "bad", weight: 70, evidence: "..." }, // terms_changes 22
-    { clauseKey: "class_action_waiver", effect: "bad", weight: 60, evidence: "..." }, // legal_rights 20
-    { clauseKey: "content_used_for_ai_training", effect: "bad", weight: 60, evidence: "..." }, // ai_data_use 16
+    { clauseKey: "terms_change_without_notice", effect: "bad", weight: 70, evidence: "..." }, // terms_changes: severe
+    { clauseKey: "class_action_waiver", effect: "bad", weight: 60, evidence: "..." }, // legal_rights: moderate
+    { clauseKey: "content_used_for_ai_training", effect: "bad", weight: 60, evidence: "..." }, // ai_data_use: severe
   ];
-  // distinct categories: 22 + 20 + 16 = 58; score = (100 - 58) / 10 = 4.2
-  assert.equal(computeScore(hostile), 4.2);
+  // Worst tier present is SEVERE => ceiling 5.9. Ordered worst-first the tiers are
+  // [severe, severe, moderate] with deducts 1.0, 1.0, 0.6 and decay 0.6^i:
+  //   5.9 - (1.0*1 + 1.0*0.6 + 0.6*0.36) = 5.9 - 1.816 = 4.084 -> 4.1 (a C).
+  assert.equal(computeScore(hostile), 4.1);
+});
+
+test("computeScore caps a data-seller at the Critical ceiling (<= D)", () => {
+  const seller: Finding[] = [
+    { clauseKey: "can_sell_personal_data", effect: "bad", weight: 80, evidence: "..." }, // data_sale: critical
+  ];
+  // Critical concern => ceiling 3.9, one critical deduct of 1.5 => 3.9 - 1.5 = 2.4 (a D).
+  assert.equal(computeScore(seller), 2.4);
 });
 
 test("computeScore uses an explicit finding.category over the taxonomy lookup", () => {
@@ -84,8 +96,8 @@ test("computeScore uses an explicit finding.category over the taxonomy lookup", 
     // unknown clauseKey, but category is denormalized on the finding
     { clauseKey: "some_future_clause", effect: "bad", weight: 50, category: "data_sale", evidence: "..." },
   ];
-  // data_sale penalty = 25; score = (100 - 25) / 10 = 7.5
-  assert.equal(computeScore(findings), 7.5);
+  // data_sale is CRITICAL: ceiling 3.9 - 1.5 = 2.4, resolved from the explicit category.
+  assert.equal(computeScore(findings), 2.4);
 });
 
 test("scoreVerdict buckets correctly", () => {
