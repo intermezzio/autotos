@@ -27,7 +27,7 @@ This document provides step-by-step instructions for publishing the AutoTOS brow
 1. **Privacy Policy** (required by all three stores)
    - AutoTOS only sends the eTLD+1 domain (e.g., `github.com`) to its backend, never full URLs or PII
    - The extension uses `storage` permission to cache the alias map locally
-   - **Action required:** Write a privacy policy and host it (suggest: `https://intermezzio.github.io/autotos/privacy (or another hosted URL — no custom domain yet)`)
+   - **Action required:** Write a privacy policy and host it (suggest: `https://raw.githubusercontent.com/intermezzio/autotos/main/PRIVACY.md`)
    - **Content should cover:** what data is collected (domain only), why (to fetch TOS analysis), where it's sent (autotos-data/autotos-request.amascillaro.workers.dev), how long it's retained, that no PII is collected
 
 2. **Support/Homepage URL** (Chrome requires, Firefox/Safari strongly recommend)
@@ -117,7 +117,7 @@ This document provides step-by-step instructions for publishing the AutoTOS brow
        - `storage`: "Required to cache the domain alias map locally, enabling the extension to work offline and reducing network requests."
        - `host_permissions` to `autotos-data.amascillaro.workers.dev`: "The CDN serving pre-analyzed Terms of Service data as static JSON files."
        - `host_permissions` to `autotos-request.amascillaro.workers.dev`: "The request endpoint where users can submit new domains for analysis."
-     - Privacy policy URL: `https://intermezzio.github.io/autotos/privacy (or another hosted URL — no custom domain yet)` (must be live before submission)
+     - Privacy policy URL: `https://raw.githubusercontent.com/intermezzio/autotos/main/PRIVACY.md` (must be live before submission)
    
    - **Distribution tab:**
      - Visibility: Public or Unlisted (start with Unlisted for testing, then switch to Public)
@@ -197,7 +197,7 @@ This document provides step-by-step instructions for publishing the AutoTOS brow
      - Tags: `terms-of-service`, `privacy`, `tos`, `legal`, `transparency`
      - Homepage: `https://github.com/intermezzio/autotos`
      - Support email or URL: `https://github.com/intermezzio/autoTOS/issues` (or create a support email)
-     - Privacy policy: `https://intermezzio.github.io/autotos/privacy (or another hosted URL — no custom domain yet)`
+     - Privacy policy: `https://raw.githubusercontent.com/intermezzio/autotos/main/PRIVACY.md`
    
    - **Version notes:**
      - "Initial public release"
@@ -314,7 +314,7 @@ This document provides step-by-step instructions for publishing the AutoTOS brow
      - Name: `AutoTOS`
      - Subtitle (optional): "Fair Terms of Service Analyzer"
      - Category: **Utilities** or **Productivity**
-     - Privacy Policy URL: `https://intermezzio.github.io/autotos/privacy (or another hosted URL — no custom domain yet)`
+     - Privacy Policy URL: `https://raw.githubusercontent.com/intermezzio/autotos/main/PRIVACY.md`
      - Support URL: `https://github.com/intermezzio/autotos`
    
    - **Pricing and Availability:**
@@ -384,7 +384,7 @@ This document provides step-by-step instructions for publishing the AutoTOS brow
 ## Recommended Publishing Sequence
 
 ### Phase 1: Pre-Launch Preparation (1-2 days)
-1. Write and host the privacy policy at `https://intermezzio.github.io/autotos/privacy (or another hosted URL — no custom domain yet)`
+1. Write and host the privacy policy at `https://raw.githubusercontent.com/intermezzio/autotos/main/PRIVACY.md`
 2. Ensure `https://github.com/intermezzio/autotos` is live with project info and support contact
 3. Create promotional screenshots (5 total, reusable across all stores)
 4. (Optional) Create a store-specific 128x128 icon without the "?" (for Chrome/Firefox)
@@ -418,7 +418,7 @@ This document provides step-by-step instructions for publishing the AutoTOS brow
 ## Checklist
 
 ### Pre-Launch
-- [ ] Privacy policy written and hosted at `https://intermezzio.github.io/autotos/privacy (or another hosted URL — no custom domain yet)`
+- [ ] Privacy policy written and hosted at `https://raw.githubusercontent.com/intermezzio/autotos/main/PRIVACY.md`
 - [ ] `https://github.com/intermezzio/autotos` live with project info, how-to, support contact
 - [ ] 5 promotional screenshots created (extension popup in various states)
 - [ ] (Optional) Store-specific 128x128 icon without "?"

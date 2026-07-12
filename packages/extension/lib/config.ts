@@ -22,8 +22,12 @@ export const ALIASES_URL = `${STORE_BASE}/v1/aliases.json`;
 /** How long a cached alias map is considered fresh (24h). */
 export const ALIAS_TTL_MS = 24 * 60 * 60 * 1000;
 
+/** How long a cached per-domain analysis lookup is considered fresh (24h). */
+export const ANALYSIS_TTL_MS = 24 * 60 * 60 * 1000;
+
 /** chrome.storage.local keys. */
 export const STORAGE_KEYS = {
   aliasCache: "aliasCache",
   requestOutbox: "requestOutbox",
+  analysisCache: "analysisCache",
 } as const;

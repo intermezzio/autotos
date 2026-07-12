@@ -2,7 +2,8 @@ import browser from "webextension-polyfill";
 import { toRegistrableDomain, resolveCanonical, scoreVerdict, scoreGrade, gradeLabel } from "@autotos/core";
 import type { DomainAnalysis, Finding } from "@autotos/contracts";
 import { getAliasMap } from "../../lib/alias-cache.js";
-import { lookupForUrl, requestAnalysis, type LookupResult } from "../../lib/store.js";
+import { requestAnalysis, type LookupResult } from "../../lib/store.js";
+import { lookupForUrlCached, invalidateDomain } from "../../lib/analysis-cache.js";
 import { iconStateFor, setTabIcon } from "../../lib/icon.js";
 
 const content = document.getElementById("content")!;
@@ -14,7 +15,7 @@ async function main(): Promise<void> {
   const tab = await getActiveTab();
   const url = tab?.url ?? "";
 
-  const result = await lookupForUrl(url);
+  const result = await lookupForUrlCached(url);
   render(result, url);
 
   // Reflect the site's grade on the toolbar icon for this tab (grayed "?" if we
@@ -172,6 +173,9 @@ function renderMiss(domain: string, pageUrl: string): void {
 
     const res = await requestAnalysis(canonical, hintUrls);
     if (res.ok || res.status === "already_present") {
+      // Drop the cached "miss" so the next navigation re-checks the CDN and can
+      // pick up a freshly published grade without waiting out the TTL.
+      void invalidateDomain(canonical);
       button.hidden = true;
       status.className = "request-status request-status--ok";
       if (res.message) {

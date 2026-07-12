@@ -8,10 +8,18 @@ export default defineConfig({
     name: "AutoTOS",
     description:
       "See how fair a website's Terms of Service are — flagged clauses and a 0–10 fairness score, right in your browser.",
-    // Only permissions we actually need: read the active tab's URL on click,
-    // and persist the alias cache. No broad host permissions — the content
-    // script derives the domain locally and the popup does the network calls.
-    permissions: ["activeTab", "storage"],
+    // Project homepage; the store listings also link the privacy policy hosted
+    // as a raw file in this repo (see PRIVACY.md).
+    homepage_url: "https://github.com/intermezzio/autotos",
+    // Permissions we actually need:
+    //  - activeTab: read the current tab's URL when the popup is opened.
+    //  - tabs: observe navigations/tab switches in the background so the toolbar
+    //    icon can reflect each site's grade automatically (activeTab only grants
+    //    URL access on click, which isn't enough for the on-navigation icon).
+    //  - storage: persist the alias map, per-domain analysis cache, and outbox.
+    // Still no broad host permissions and no page-content access — we only ever
+    // read a tab's URL and reduce it to its registrable domain.
+    permissions: ["activeTab", "tabs", "storage"],
     // The store host (CDN) and the request endpoint (Worker) we talk to.
     // No custom domain yet — the *.workers.dev URLs are the live endpoints.
     host_permissions: [
